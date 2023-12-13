@@ -14,22 +14,23 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
 );
 
 // Create a unique name for the container
-const containerName = 'quickstart' + uuidv1();
+const containerName = 'store' + uuidv1();
 
-console.log('\nCreating container...');
-console.log('\t', containerName);
+const uploadBlob = async (localFilePath, originalname) => {
 
-// Get a reference to a container
-const containerClient = blobServiceClient.getContainerClient(containerName);
-// Create the container
-const createContainerResponse = await containerClient.create();
-console.log(
-    `Container was created successfully.\n\trequestId:${createContainerResponse.requestId}\n\tURL: ${containerClient.url}`
-);
+    console.log('\nCreating container...');
+    console.log('\t', containerName);
 
-const uploadBlob = async () => {
+    // Get a reference to a container
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    // Create the container
+    const createContainerResponse = await containerClient.create();
+    console.log(
+        `Container was created successfully.\n\trequestId:${createContainerResponse.requestId}\n\tURL: ${containerClient.url}`
+    );
+
     // Create a unique name for the blob
-    const blobName = 'workshop' + uuidv1() + '.txt';
+    const blobName = 'workshop-file' + uuidv1() + `${originalname}`;
 
     // Get a block blob client
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -39,9 +40,7 @@ const uploadBlob = async () => {
         `\nUploading to Azure storage as blob\n\tname: ${blobName}:\n\tURL: ${blockBlobClient.url}`
     );
 
-    // Upload data to the blob
-    const data = 'Hello, World!';
-    const uploadBlobResponse = await blockBlobClient.upload(data, data.length);
+    const uploadBlobResponse = await blockBlobClient.uploadData(localFilePath);
     console.log(
         `Blob was uploaded successfully. requestId: ${uploadBlobResponse.requestId}`
     );
