@@ -1,16 +1,45 @@
-const { uploadBlob } = require("../helpers/storageHelper");
+const { createContainer, uploadBlobToContainer, listBlobsInContainer, deleteContainer } = require("../helpers/storageHelper");
 // list items
 // download
+
+const createContain = async (req, res) => {
+    try {
+        const container = await createContainer()
+        res.status(200).send({
+            data: container,
+            message: "Container Created successfully",
+            status: 0,
+        })
+    } catch (err) {
+        res.status(500).send({ data: {}, message: err.message });
+    }
+};
 
 const uploadFile = async (req, res) => {
     try {
         const { buffer, originalname } = req.file
+        const { containerName } = req.body
         // remove whitespaces
         const newName = originalname.replaceAll(" ", "")
-        await uploadBlob(buffer, newName)
+        await uploadBlobToContainer(containerName, buffer, newName)
 
         res.status(200).send({
             message: "File uploaded successfully",
+            status: 0,
+        })
+    } catch (err) {
+        res.status(500).send({ data: {}, message: err.message });
+    }
+};
+
+const listItems = async (req, res) => {
+    try {
+        const { containerName } = req.query
+        const blobs = await listBlobsInContainer(containerName)
+
+        res.status(200).send({
+            data: blobs,
+            message: `Blob List in Container: ${containerName}`,
             status: 0,
         })
     } catch (err) {
@@ -26,25 +55,24 @@ const downloadFile = async (req, res) => {
     }
 };
 
-const listItems = async (req, res) => {
+const deleteContain = async (req, res) => {
     try {
+        const { containerName } = req.query
+        await deleteContainer(containerName)
 
-    } catch (err) {
-        res.status(500).send({ data: {}, message: err.message });
-    }
-};
-
-const deleteContainer = async (req, res) => {
-    try {
-
+        res.status(204).send({
+            message: `Container Deleted`,
+            status: 0,
+        })
     } catch (err) {
         res.status(500).send({ data: {}, message: err.message });
     }
 };
 
 module.exports = {
+    createContain,
     uploadFile,
     downloadFile,
     listItems,
-    deleteContainer
+    deleteContain
 }

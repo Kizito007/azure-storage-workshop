@@ -13,11 +13,10 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
     AZURE_STORAGE_CONNECTION_STRING
 );
 
-// Create a unique name for the container
-const containerName = 'store' + uuidv1();
 
-const uploadBlob = async (localFilePath, originalname) => {
-
+const createContainer = async () => {
+    // Create a unique name for the container
+    const containerName = 'store-' + uuidv1();
     console.log('\nCreating container...');
     console.log('\t', containerName);
 
@@ -28,9 +27,16 @@ const uploadBlob = async (localFilePath, originalname) => {
     console.log(
         `Container was created successfully.\n\trequestId:${createContainerResponse.requestId}\n\tURL: ${containerClient.url}`
     );
+    return containerName;
+}
+
+const uploadBlobToContainer = async (containerName, localFilePath, originalname) => {
+
+    // Get a reference to a container
+    const containerClient = blobServiceClient.getContainerClient(containerName);
 
     // Create a unique name for the blob
-    const blobName = 'workshop-file' + uuidv1() + `${originalname}`;
+    const blobName = 'workshop-file-' + uuidv1() + `${originalname}`;
 
     // Get a block blob client
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -46,19 +52,23 @@ const uploadBlob = async (localFilePath, originalname) => {
     );
 }
 
-const listBlobsInContainer = async () => {
-    console.log('\nListing blobs...');
-
+const listBlobsInContainer = async (containerName) => {
     // List the blob(s) in the container.
+    // Get a reference to a container
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const blobs = []
     for await (const blob of containerClient.listBlobsFlat()) {
         // Get Blob Client from name, to get the URL
         const tempBlockBlobClient = containerClient.getBlockBlobClient(blob.name);
 
         // Display blob name and URL
-        console.log(
-            `\n\tname: ${blob.name}\n\tURL: ${tempBlockBlobClient.url}\n`
-        );
+        const data = {
+            blobName: blob.name,
+            url: tempBlockBlobClient.url
+        }
+        blobs.push(data)
     }
+    return blobs;
 }
 
 const downloadBlob = async () => {
@@ -73,10 +83,11 @@ const downloadBlob = async () => {
     );
 }
 
-const deleteContainer = async () => {
+const deleteContainer = async (containerName) => {
     // Delete container
     console.log('\nDeleting container...');
 
+    const containerClient = blobServiceClient.getContainerClient(containerName);
     const deleteContainerResponse = await containerClient.delete();
     console.log(
         'Container was deleted successfully. requestId: ',
@@ -95,7 +106,8 @@ async function streamToText(readable) {
 }
 
 module.exports = {
-    uploadBlob,
+    createContainer,
+    uploadBlobToContainer,
     listBlobsInContainer,
     downloadBlob,
     deleteContainer,

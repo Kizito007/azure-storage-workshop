@@ -14,13 +14,17 @@ const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
 
 const {
+    createContain,
     downloadFile,
     uploadFile,
+    listItems,
+    deleteContain,
 } = require("../controllers/fileController");
 
 fileRoute.get("/download", downloadFile);
-fileRoute.get("/list-blobs", downloadFile);
+fileRoute.get("/list-blobs", listItems);
 fileRoute.post("/upload", upload.single('file'), uploadFile);
-fileRoute.delete("/", uploadFile);
+fileRoute.post("/create-container", createContain);
+fileRoute.delete("/", deleteContain);
 
 module.exports = { fileRoute };
