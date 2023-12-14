@@ -1,6 +1,4 @@
-const { createContainer, uploadBlobToContainer, listBlobsInContainer, deleteContainer } = require("../helpers/storageHelper");
-// list items
-// download
+const { createContainer, uploadBlobToContainer, listBlobsInContainer, deleteContainer, downloadBlob } = require("../helpers/storageHelper");
 
 const createContain = async (req, res) => {
     try {
@@ -49,7 +47,10 @@ const listItems = async (req, res) => {
 
 const downloadFile = async (req, res) => {
     try {
+        const { containerName, blobName } = req.query
+        const file = await downloadBlob(containerName, blobName)
 
+        res.download(file); // Set disposition and send it.
     } catch (err) {
         res.status(500).send({ data: {}, message: err.message });
     }

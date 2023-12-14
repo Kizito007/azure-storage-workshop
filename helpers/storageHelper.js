@@ -1,5 +1,6 @@
 const { BlobServiceClient } = require("@azure/storage-blob");
 const { v1: uuidv1 } = require("uuid");
+const path = require('path');
 require("dotenv").config();
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -71,16 +72,15 @@ const listBlobsInContainer = async (containerName) => {
     return blobs;
 }
 
-const downloadBlob = async () => {
-    // Get blob content from position 0 to the end
-    // In Node.js, get downloaded data by accessing downloadBlockBlobResponse.readableStreamBody
-    // In browsers, get downloaded data by accessing downloadBlockBlobResponse.blobBody
-    const downloadBlockBlobResponse = await blockBlobClient.download(0);
-    console.log('\nDownloaded blob content...');
-    console.log(
-        '\t',
-        await streamToText(downloadBlockBlobResponse.readableStreamBody)
-    );
+const downloadBlob = async (containerName, blobName) => {
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const blobClient = await containerClient.getBlobClient(blobName);
+
+    const fileNameWithPath = path.join(__dirname, `${blobName}`);
+
+    await blobClient.downloadToFile(fileNameWithPath);
+    console.log(`download of ${blobName} success`);
+    return fileNameWithPath.toString();
 }
 
 const deleteContainer = async (containerName) => {
@@ -93,16 +93,6 @@ const deleteContainer = async (containerName) => {
         'Container was deleted successfully. requestId: ',
         deleteContainerResponse.requestId
     );
-}
-
-// Convert stream to text
-async function streamToText(readable) {
-    readable.setEncoding('utf8');
-    let data = '';
-    for await (const chunk of readable) {
-        data += chunk;
-    }
-    return data;
 }
 
 module.exports = {
